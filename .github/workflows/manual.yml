@@ -11,14 +11,16 @@ jobs:
   create-changelog:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
+      - name: Checkout Main Branch
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # ✅ Ensure full commit history
+          fetch-depth: 0  # ✅ Ensure full history
 
-      - name: Create and Switch to a Temporary Branch
+      - name: Switch to Main Branch
         run: |
-          git checkout -b temp-changelog-branch  # ✅ Create a temporary branch
+          git fetch origin main  # ✅ Fetch latest main branch
+          git checkout main  # ✅ Ensure we are on the main branch
+          git pull origin main  # ✅ Get the latest changes
 
       - name: Generate Markdown
         run: |
@@ -28,7 +30,7 @@ jobs:
           RELEASE_DATE="${{ github.event.release.published_at }}"
 
           FILE_NAME="changelog/${RELEASE_TAG}.md"
-          mkdir -p changelog  # ✅ Ensure folder exists
+          mkdir -p changelog  # ✅ Ensure the changelog folder exists
           echo "---" > $FILE_NAME
           echo "title: \"$RELEASE_NAME\"" >> $FILE_NAME
           echo "date: \"$RELEASE_DATE\"" >> $FILE_NAME
@@ -42,9 +44,6 @@ jobs:
           git add $FILE_NAME
           git commit -m "Add changelog for $RELEASE_TAG"
 
-      - name: Merge Changes into Main and Push
+      - name: Push Changes
         run: |
-          git checkout main  # ✅ Switch back to the main branch
-          git pull origin main  # ✅ Get the latest changes
-          git merge --no-ff temp-changelog-branch  # ✅ Merge the temp branch
-          git push origin main  # ✅ Push the updated changelog
+          git push origin main  # ✅ Ensure we are pushing to the main branch
